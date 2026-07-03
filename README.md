@@ -1,6 +1,6 @@
 # Inventory Management System
 
-This is a beginner-friendly inventory management project made with Flask. It
+This is an inventory management project made with Flask. It
 allows employees to add, view, update, and delete products. Product information
 can also be found and imported from OpenFoodFacts.
 
