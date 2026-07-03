@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request
 
+from openfoodfacts import get_product_by_barcode, search_products_by_name
+
 
 app = Flask(__name__)
 
@@ -93,6 +95,40 @@ def delete_item(item_id):
 
     inventory.remove(item)
     return jsonify({"message": "Item deleted"})
+
+
+@app.route("/products/barcode/<barcode>", methods=["GET"])
+def find_product_by_barcode(barcode):
+    product = get_product_by_barcode(barcode)
+    if product is None:
+        return jsonify({"error": "Product not found or API unavailable"}), 404
+    return jsonify(product)
+
+
+@app.route("/products/search", methods=["GET"])
+def find_products_by_name():
+    name = request.args.get("name", "").strip()
+    if not name:
+        return jsonify({"error": "A product name is required"}), 400
+
+    products = search_products_by_name(name)
+    if products is None:
+        return jsonify({"error": "OpenFoodFacts API unavailable"}), 503
+    return jsonify(products)
+
+
+@app.route("/inventory/import/<barcode>", methods=["POST"])
+def import_product(barcode):
+    product = get_product_by_barcode(barcode)
+    if product is None:
+        return jsonify({"error": "Product not found or API unavailable"}), 404
+
+    new_id = max([item["id"] for item in inventory], default=0) + 1
+    product["id"] = new_id
+    product["price"] = 0
+    product["stock"] = 0
+    inventory.append(product)
+    return jsonify(product), 201
 
 
 def find_item(item_id):
